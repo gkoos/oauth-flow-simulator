@@ -1,0 +1,31 @@
+{
+  "name": "oauth-flow-simulator",
+  "version": "0.1.0",
+  "main": "./lib/index.js",
+  "bin": {
+    "oauth-sim": "./bin/oauth-sim.js"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node ./bin/oauth-sim.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "cookie-parser": "^1.4.7",
+    "cookie-session": "^2.1.0",
+    "cors": "^2.8.5",
+    "debug": "^4.3.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^6.3.3"
+  }
+}

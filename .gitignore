@@ -1,0 +1,41 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# Test coverage
+coverage/
+
+# VSCode
+.vscode/
+
+# Build output
+dist/
+build/
+
+# Misc
+*.local
+*.sublime-workspace
+*.sublime-project
+
+# Jest
+.jest/
+
+# Optional: ignore local SQLite or DB files
+*.sqlite
+*.db

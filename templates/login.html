@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - OAuth Flow Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="/logo.svg" alt="OAuth Flow Simulator Logo" width="220" height="70" />
+    </div>
+    <h2>Login</h2>
+    <form id="loginForm" method="POST">
+      <label for="username">Username:
+        <input id="username" type="text" name="username" required autocomplete="username">
+      </label>
+      <label for="password">Password:
+        <input id="password" type="password" name="password" required autocomplete="current-password">
+      </label>
+      <input type="hidden" name="original_query" id="original_query">
+      <input type="submit" value="Login">
+    </form>
+    {{#if error}}
+    <div id="error" aria-live="polite" class="active">{{error}}</div>
+    {{/if}}
+  </div>
+  <script>
+    // Preserve query string in form action and hidden field
+    document.getElementById('loginForm').action = '/login' + window.location.search;
+    document.getElementById('original_query').value = window.location.search;
+  </script>
+</body>
+</html>

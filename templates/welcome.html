@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OAuth Flow Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="/logo.svg" alt="OAuth Flow Simulator Logo" width="220" height="70" />
+    </div>
+    <h1>OAuth Flow Simulator</h1>
+    <div class="desc">
+      A lightweight, developer-friendly OAuth2 and OpenID Connect (OIDC) mock server for local development and automated testing.
+    </div>
+    <div class="links">
+      <a href="/login">Login Page</a>
+      <a href="/authorize?response_type=code&client_id=web-app&redirect_uri=http://localhost:3000/callback&scope=openid%20profile&state=xyz">Start OAuth2 Flow</a>
+      <a href="/docs/oauth-flow-simulator.md" target="_blank">Documentation</a>
+      <a href="https://github.com/gkoos/oauth-flow-simulator" target="_blank">GitHub</a>
+    </div>
+  </div>
+</body>
+</html>
