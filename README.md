@@ -2,6 +2,9 @@
 
 A lightweight, developer-friendly OAuth2 and OpenID Connect (OIDC) mock server for local development and automated testing.
 
+> **Note**
+> This project is intentionally API-only and does not include a dashboard or admin UI. All user, client, and scope management is done via the REST API. This keeps the simulator lightweight and focused as a dev tool for automated testing, scripting, and backend integration. For interactive management, use the API directly or with tools like Postman, curl, or Swagger UI.
+
 ## Quick Start
 
 ```bash

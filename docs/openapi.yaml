@@ -1,0 +1,332 @@
+openapi: 3.0.3
+info:
+  title: OAuth Flow Simulator Management API
+  version: 1.0.0
+  description: API for managing users, clients, and scopes at runtime.
+servers:
+  - url: http://localhost:4000
+paths:
+  /sim/users:
+    get:
+      summary: List all users
+      operationId: listUsers
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /sim/users/{username}:
+    get:
+      summary: Get a user by username
+      operationId: getUser
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      summary: Update a user
+      operationId: updateUser
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    delete:
+      summary: Delete a user
+      operationId: deleteUser
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+  /sim/clients:
+    get:
+      summary: List all clients
+      operationId: listClients
+      responses:
+        '200':
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    post:
+      summary: Create a new client
+      operationId: createClient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+  /sim/clients/{clientId}:
+    get:
+      summary: Get a client by clientId
+      operationId: getClient
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client not found
+    put:
+      summary: Update a client
+      operationId: updateClient
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client not found
+    delete:
+      summary: Delete a client
+      operationId: deleteClient
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Client deleted
+        '404':
+          description: Client not found
+  /sim/scopes:
+    get:
+      summary: List all scopes
+      operationId: listScopes
+      responses:
+        '200':
+          description: List of scopes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Scope'
+    post:
+      summary: Create a new scope
+      operationId: createScope
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScopeInput'
+      responses:
+        '201':
+          description: Scope created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scope'
+  /sim/scopes/{scope}:
+    get:
+      summary: Get a scope by name
+      operationId: getScope
+      parameters:
+        - in: path
+          name: scope
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scope found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scope'
+        '404':
+          description: Scope not found
+    put:
+      summary: Update a scope
+      operationId: updateScope
+      parameters:
+        - in: path
+          name: scope
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScopeInput'
+      responses:
+        '200':
+          description: Scope updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scope'
+        '404':
+          description: Scope not found
+    delete:
+      summary: Delete a scope
+      operationId: deleteScope
+      parameters:
+        - in: path
+          name: scope
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Scope deleted
+        '404':
+          description: Scope not found
+components:
+  schemas:
+    User:
+      type: object
+      required: [username, password, scopes]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+    UserInput:
+      type: object
+      required: [username, password, scopes]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+    Client:
+      type: object
+      required: [clientId, clientSecret, redirectUris]
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        redirectUris:
+          type: array
+          items:
+            type: string
+    ClientInput:
+      type: object
+      required: [clientId, clientSecret, redirectUris]
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        redirectUris:
+          type: array
+          items:
+            type: string
+    Scope:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    ScopeInput:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+        description:
+          type: string

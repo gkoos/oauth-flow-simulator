@@ -15,6 +15,7 @@ body {
   padding: 2.5rem 2rem 2rem 2rem;
   min-width: 340px;
   max-width: 95vw;
+  width: 360px; /* Fix width for consistent layout */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -107,4 +108,10 @@ input[type="submit"]:hover {
 }
 #error.active {
   display: block;
+}
+form .oauth-message {
+  word-break: break-word;
+  white-space: normal;
+  width: 100%;
+  box-sizing: border-box;
 }
