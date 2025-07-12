@@ -259,6 +259,46 @@ paths:
                 properties:
                   error:
                     type: string
+  /revoke:
+    post:
+      summary: OAuth2 Token Revocation Endpoint
+      description: |
+        Revokes an access token or refresh token as per RFC 7009. Requires client authentication via HTTP Basic Auth or by including client_id and client_secret in the request body. Both methods are supported, but only HTTP Basic Auth is formally documented in OpenAPI security schemes.
+      tags:
+        - OAuth2
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The token to revoke (access or refresh token).
+                token_type_hint:
+                  type: string
+                  enum: [access_token, refresh_token]
+                  description: Optional hint about the type of the token submitted for revocation.
+                client_id:
+                  type: string
+                  description: Client ID (if not using HTTP Basic Auth).
+                client_secret:
+                  type: string
+                  description: Client secret (if not using HTTP Basic Auth).
+              required:
+                - token
+      responses:
+        '200':
+          description: Token revoked (or token not found). Always returns 200 OK per RFC 7009.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty object.
+      security:
+        - basicAuth: []
+
 components:
   schemas:
     User:
@@ -325,3 +365,7 @@ components:
           type: string
         consentNeeded:
           type: boolean
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
