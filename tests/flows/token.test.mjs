@@ -42,6 +42,17 @@ describe('handleToken', () => {
     expect(Object.keys(tokens).length).toBeGreaterThan(0);
   });
 
+  it('returns access token for valid request using HTTP Basic Auth', () => {
+    // Simulate HTTP Basic Auth header
+    const base64 = Buffer.from('web-app:shhh').toString('base64');
+    req.headers = { authorization: `Basic ${base64}` };
+    // Remove client_secret from body to ensure only header is used
+    delete req.body.client_secret;
+    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ access_token: expect.any(String), token_type: 'Bearer' }));
+    expect(Object.keys(tokens).length).toBeGreaterThan(0);
+  });
+
   it('returns error for unsupported grant_type', () => {
     req.body.grant_type = 'password';
     handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
@@ -125,10 +136,39 @@ describe('refresh token flow', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
   it('returns error for wrong client', () => {
-    const oldRefresh = issueRefreshToken();
-    const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: 'other-client', client_secret: clientSecret } };
+    // Setup: two clients
+    const clientA = { clientId: 'clientA', clientSecret: 'secretA', refreshTokenLifetime: 3600000 };
+    const clientB = { clientId: 'clientB', clientSecret: 'secretB', refreshTokenLifetime: 3600000 };
+    const getClient = (id) => (id === 'clientA' ? clientA : id === 'clientB' ? clientB : undefined);
+
+    // Create a refresh token for clientB
+    const refreshTokens = {
+      'rtok_wrongclient': {
+        username: 'user1',
+        clientId: 'clientB', // belongs to clientB
+        scopes: ['offline_access'],
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + 3600000
+      }
+    };
+
+    const users = [{ username: 'user1' }];
+    const tokens = {};
+
+    // Request: use clientA credentials with clientB's refresh token
+    const req = {
+      body: {
+        grant_type: 'refresh_token',
+        client_id: 'clientA',
+        client_secret: 'secretA',
+        refresh_token: 'rtok_wrongclient'
+      },
+      headers: {}
+    };
     const res = { status: jest.fn(() => res), json: jest.fn() };
+
     handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
