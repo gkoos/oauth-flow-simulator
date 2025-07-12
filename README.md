@@ -175,5 +175,73 @@ ERROR INJECTION - force_error=... error_description=...
 
 This makes it easy to spot error-injected requests during development and testing.
 
+## JWT Claim Customization
+
+The simulator supports flexible JWT claim customization, allowing you to control the contents of issued access tokens at runtime. This feature is useful for testing, simulating real-world scenarios, and adapting token payloads for different clients and users.
+
+### Levels of Customization
+- **Global Claims:** Set default claims for all tokens via the `/sim/config/jwt` endpoint. These apply to every token unless overridden.
+- **Per-Client Claims:** Override or add claims for a specific client using `/sim/config/jwt/clients/{clientId}`. These take precedence over global claims for that client.
+- **Per-User Claims:** Override or add claims for a specific user using `/sim/config/jwt/users/{username}`. These take precedence over both global and client claims for that user.
+
+Claims are merged in the following order (highest precedence last):
+1. Global claims
+2. Per-client claims
+3. Per-user claims
+
+If a claim is set to `null` at any level, it will be deleted from the final token payload.
+
+### Dynamic Claims
+You can use dynamic placeholders in claim values, which are resolved at token issuance. Supported placeholders include:
+- `{{username}}`: The authenticated user's username
+- `{{client_id}}`: The OAuth client ID
+- `{{scope}}`: The granted scopes
+- `{{aud}}`: The audience (usually the redirect URI)
+- `{{iss}}`: The issuer (server URL)
+- `{{exp}}`: Expiry timestamp
+- `{{iat}}`: Issued-at timestamp
+- `{{host}}`, `{{port}}`: Server host and port
+
+Example claim configuration:
+```json
+{
+  "iss": "{{host}}",
+  "sub": "{{username}}",
+  "aud": "{{aud}}",
+  "exp": "{{exp}}",
+  "scope": "{{scope}}",
+  "foo": "bar"
+}
+```
+
+### API Usage
+- **Set global claims:**
+  ```sh
+  curl -X POST http://localhost:4000/sim/config/jwt \
+    -H "Content-Type: application/json" \
+    -d '{ "foo": "bar", "iss": "{{host}}" }'
+  ```
+- **Set per-client claims:**
+  ```sh
+  curl -X POST http://localhost:4000/sim/config/jwt/clients/web-app \
+    -H "Content-Type: application/json" \
+    -d '{ "client_claim": "value" }'
+  ```
+- **Set per-user claims:**
+  ```sh
+  curl -X POST http://localhost:4000/sim/config/jwt/users/alice \
+    -H "Content-Type: application/json" \
+    -d '{ "user_claim": "value" }'
+  ```
+
+### Use Cases
+- **Simulate custom claims for different clients or users** (e.g., add roles, permissions, or custom attributes)
+- **Test downstream services** that depend on specific JWT claim formats or values
+- **Emulate real-world identity providers** by customizing claims for integration testing
+- **Validate client and user-specific logic** in your application by issuing tokens with tailored payloads
+- **Experiment with dynamic claim values** to ensure your app handles changing token contents correctly
+
+See the API documentation and OpenAPI spec for full details on claim management endpoints and payload formats.
+
 ## License
 MIT

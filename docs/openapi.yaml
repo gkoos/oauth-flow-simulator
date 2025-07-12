@@ -368,7 +368,131 @@ paths:
                     description: Type of the token introspected.
       security:
         - basicAuth: []
-
+  /sim/config/jwt:
+    get:
+      summary: Get all JWT claims configuration
+      operationId: getAllJWTClaims
+      responses:
+        '200':
+          description: All JWT claims (globals, clients, users)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  globals:
+                    type: object
+                  clients:
+                    type: object
+                  users:
+                    type: object
+    post:
+      summary: Update global JWT claims configuration
+      operationId: updateGlobalJWTClaims
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                globals:
+                  type: object
+      responses:
+        '200':
+          description: Updated global JWT claims
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  globals:
+                    type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/config/jwt/clients/{clientId}:
+    post:
+      summary: Update JWT claims for a client
+      operationId: updateClientJWTClaims
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                claims:
+                  type: object
+      responses:
+        '200':
+          description: Updated JWT claims for client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claims:
+                    type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/config/jwt/users/{userName}:
+    post:
+      summary: Update JWT claims for a user
+      operationId: updateUserJWTClaims
+      parameters:
+        - in: path
+          name: userName
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                claims:
+                  type: object
+      responses:
+        '200':
+          description: Updated JWT claims for user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claims:
+                    type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   schemas:
     User:
