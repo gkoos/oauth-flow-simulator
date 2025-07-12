@@ -59,6 +59,9 @@ This phase transforms the OAuth Flow Simulator from a static, config-driven mock
 
 ### 4. Add Delay and Error Injection Middleware/Hooks
 - **Enable configurable delays** on any endpoint for simulating network latency (Express middleware, e.g., `?delay=500`).
+  - **Usage:** Add `?delay=ms` (milliseconds) to any request to `/authorize`, `/token`, `/revoke`, or `/introspect` to simulate network latency. Example: `/token?delay=1000` will delay the response by 1 second.
+  - Maximum allowed delay is 30 seconds.
+  - Implemented as a reusable Express middleware.
 - **Allow forced error responses** (e.g., `invalid_grant`, `server_error`) via API triggers, query params, or special test endpoints.
 - **Document all error simulation options** in the API docs and OpenAPI spec.
 - **Add hooks to management endpoints** for testing error scenarios, such as forced 500 errors or custom error payloads.

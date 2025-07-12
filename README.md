@@ -26,6 +26,7 @@ npx oauth-sim start --port 4000
 - CLI tooling to start server and set config
 - OpenAPI spec and documentation
 - Minimal setup, fast startup, CI/CD friendly
+- Configurable delay injection for any endpoint (`/authorize`, `/token`, `/revoke`, `/introspect`) via `?delay=ms` query param for simulating network latency
 
 ## Directory Structure
 ```
@@ -115,6 +116,18 @@ curl -X POST http://localhost:4000/introspect \
 ```
 - Response includes `active`, `scope`, `client_id`, `username`, `exp`, `iat`, `sub`, `aud`, `iss`, `token_type`.
 - Returns `{"active":false}` for invalid, expired, or revoked tokens.
+
+## Delay Injection for Testing
+
+You can simulate network latency on any major OAuth endpoint by adding a `delay` query parameter (in milliseconds):
+
+**Example:**
+```sh
+curl -X POST "http://localhost:4000/token?delay=1000" -d ...
+```
+This will delay the response by 1 second. Maximum allowed delay is 30 seconds.
+
+Supported endpoints: `/authorize`, `/token`, `/revoke`, `/introspect`
 
 ## License
 MIT
