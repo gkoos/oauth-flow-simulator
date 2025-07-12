@@ -37,9 +37,6 @@ describe('Refresh Token Flow', () => {
       client_id: client.clientId,
       client_secret: client.clientSecret
     });
-    if (!tokenRes.body.access_token || !tokenRes.body.refresh_token) {
-      console.error('Token response:', tokenRes.body);
-    }
     expect(tokenRes.body.access_token).toBeDefined();
     expect(tokenRes.body.refresh_token).toBeDefined();
     // Check store
@@ -92,9 +89,6 @@ describe('Refresh Token Flow', () => {
       client_id: client.clientId,
       client_secret: client.clientSecret
     });
-    if (!tokenRes.body.refresh_token) {
-      console.error('Token response:', tokenRes.body);
-    }
     const meta = refreshTokens[tokenRes.body.refresh_token];
     expect(meta).toBeDefined();
     expect(meta.username).toBe(user.username);

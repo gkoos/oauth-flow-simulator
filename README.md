@@ -129,5 +129,51 @@ This will delay the response by 1 second. Maximum allowed delay is 30 seconds.
 
 Supported endpoints: `/authorize`, `/token`, `/revoke`, `/introspect`
 
+## Error Injection for Testing
+
+Error injection lets you simulate OAuth2 and OIDC error responses for any major endpoint, making it easy to test client error handling, edge cases, and custom flows.
+
+### How Error Injection Works
+- Add error injection parameters to the query string of your request.
+- The simulator will respond with the specified error code and description, following the OAuth2 spec for each endpoint.
+- Error injection is supported for `/authorize`, `/login`, `/token`, `/revoke`, and `/introspect`.
+- All error injection events are highlighted in the server logs (in red) for visibility.
+
+### Error Injection Parameters
+- For `/authorize`:
+  - `authorize_force_error`: The OAuth2 error code to inject (e.g. `invalid_request`, `access_denied`, etc.)
+  - `authorize_error_description`: Optional error description
+- For other endpoints (including `/login`):
+  - `force_error`: The OAuth2 error code to inject
+  - `error_description`: Optional error description
+
+#### Example: Injecting an error into /authorize
+```
+http://localhost:4000/authorize?response_type=code&client_id=web-app&redirect_uri=http://localhost:3000/callback&scope=openid%20profile&state=xyz&authorize_force_error=invalid_request&authorize_error_description=Simulated%20invalid%20request
+```
+This will immediately redirect to the client callback with the specified error and description.
+
+#### Example: Injecting an error into /login via /authorize
+```
+http://localhost:4000/authorize?response_type=code&client_id=web-app&redirect_uri=http://localhost:3000/callback&scope=openid%20profile&state=xyz&force_error=access_denied&error_description=Simulated%20login%20error
+```
+This will forward the error injection parameters to `/login`. After submitting the login form, the error will be injected and you will be redirected to the client callback with the error.
+
+### Supported Error Codes
+Each endpoint only allows specific error codes, per the OAuth2 spec:
+- `/authorize`: `invalid_request`, `unauthorized_client`, `access_denied`, `unsupported_response_type`, `invalid_scope`, `server_error`, `temporarily_unavailable`
+- `/login`: `access_denied`, `server_error`, `temporarily_unavailable`
+- `/token`: `invalid_request`, `invalid_client`, `invalid_grant`, `unauthorized_client`, `unsupported_grant_type`, `invalid_scope`, `server_error`, `temporarily_unavailable`
+- `/revoke`: `unsupported_token_type`, `invalid_request`, `server_error`, `temporarily_unavailable`
+- `/introspect`: `invalid_request`, `invalid_client`, `server_error`, `temporarily_unavailable`
+
+### Logging
+All error injection events are highlighted in the server logs as:
+```
+ERROR INJECTION - force_error=... error_description=...
+```
+
+This makes it easy to spot error-injected requests during development and testing.
+
 ## License
 MIT

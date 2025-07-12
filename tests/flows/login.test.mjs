@@ -6,7 +6,8 @@ describe('postLogin', () => {
 
   beforeEach(() => {
     req = {
-      body: { username: 'alice', password: 'pw123', client_id: 'cid', redirect_uri: 'uri', response_type: 'code', scope: 'openid' },
+      body: { username: 'alice', password: 'pw123' },
+      query: { client_id: 'cid', redirect_uri: 'uri', response_type: 'code', scope: 'openid' },
       session: {},
     };
     res = { redirect: jest.fn() };

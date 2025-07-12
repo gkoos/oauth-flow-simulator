@@ -13,24 +13,18 @@
       <img src="/logo.svg" alt="OAuth Flow Simulator Logo" width="220" height="70" />
     </div>
     <h2>Login</h2>
-    <form id="loginForm" method="POST">
-      <% if (oauthParams) { %>
-        <% if (oauthParams.client_id) { %>
-          <input type="hidden" name="client_id" value="<%= oauthParams.client_id %>">
-        <% } %>
-        <% if (oauthParams.redirect_uri) { %>
-          <input type="hidden" name="redirect_uri" value="<%= oauthParams.redirect_uri %>">
-        <% } %>
-        <% if (oauthParams.response_type) { %>
-          <input type="hidden" name="response_type" value="<%= oauthParams.response_type %>">
-        <% } %>
-        <% if (oauthParams.scope) { %>
-          <input type="hidden" name="scope" value="<%= oauthParams.scope %>">
-        <% } %>
-        <% if (oauthParams.state) { %>
-          <input type="hidden" name="state" value="<%= oauthParams.state %>">
-        <% } %>
-      <% } %>
+    <form id="loginForm" method="POST"
+      action="/login?<%=
+        [
+          oauthParams && oauthParams.client_id ? 'client_id=' + encodeURIComponent(oauthParams.client_id) : '',
+          oauthParams && oauthParams.redirect_uri ? 'redirect_uri=' + encodeURIComponent(oauthParams.redirect_uri) : '',
+          oauthParams && oauthParams.response_type ? 'response_type=' + encodeURIComponent(oauthParams.response_type) : '',
+          oauthParams && oauthParams.scope ? 'scope=' + encodeURIComponent(oauthParams.scope) : '',
+          oauthParams && oauthParams.state ? 'state=' + encodeURIComponent(oauthParams.state) : '',
+          typeof force_error !== 'undefined' ? 'force_error=' + encodeURIComponent(force_error) : '',
+          typeof error_description !== 'undefined' ? 'error_description=' + encodeURIComponent(error_description) : ''
+        ].filter(Boolean).join('&')
+      %>">
       <label for="username">Username:
         <input id="username" type="text" name="username" required autocomplete="username" value="<%= username %>">
       </label>
