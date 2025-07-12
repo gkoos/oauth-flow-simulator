@@ -306,6 +306,45 @@ await sim.start();
 
 ---
 
+## 🔑 Token Revocation and Introspection
+
+### /revoke (RFC 7009)
+
+Revokes an access token or refresh token. Requires client authentication (HTTP Basic Auth or client_id/client_secret in body).
+
+**Example:**
+```sh
+curl -X POST http://localhost:4000/revoke \
+  -u web-app:shhh \
+  -d token=ACCESS_OR_REFRESH_TOKEN
+```
+
+- `token_type_hint` (optional): Specify `access_token` or `refresh_token` to optimize lookup.
+- Always returns 200 OK, even if the token does not exist or is already revoked.
+
+### /introspect (RFC 7662)
+
+Returns metadata about an access or refresh token. Requires client authentication.
+
+**Example (access token):**
+```sh
+curl -X POST http://localhost:4000/introspect \
+  -u web-app:shhh \
+  -d token=ACCESS_TOKEN
+```
+
+**Example (refresh token):**
+```sh
+curl -X POST http://localhost:4000/introspect \
+  -u web-app:shhh \
+  -d token=REFRESH_TOKEN
+```
+
+- Response includes `active`, `scope`, `client_id`, `username`, `exp`, `iat`, `sub`, `aud`, `iss`, `token_type`.
+- Returns `{"active":false}` for invalid, expired, or revoked tokens.
+
+---
+
 ## 🖥️ Frontend Views / HTML Pages
 
 To enable developers and testers to interact with and inspect the mock OAuth server, the following HTML pages should be included:

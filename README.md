@@ -13,15 +13,19 @@ yarn install # or
 npx oauth-sim start --port 4000
 ```
 
-## Features (Phase 1)
-- HTTP server with `/authorize` and `/token` endpoints
-- Authorization code flow (no PKCE yet)
-- Static, in-memory clients and users
-- JWT access tokens with basic claims (sub, aud, exp)
-- Basic login page (HTML form)
-- Basic error page for auth failures
-- CLI tooling to start server and set simple config
-- Minimal documentation and usage examples
+## Features
+- OAuth2 Authorization Code flow (with realistic consent, per-client/user scope consent)
+- JWT access token and refresh token support (rotation, expiry, per-client lifetime)
+- RFC 7009-compliant token revocation endpoint (`/revoke`)
+- RFC 7662-compliant token introspection endpoint (`/introspect`)
+- Dynamic, in-memory store for clients, users, tokens, refresh tokens
+- REST API for managing users, clients, scopes at runtime (`/sim/users`, `/sim/clients`, `/sim/scopes`)
+- Authentication middleware for sensitive endpoints (supports HTTP Basic Auth and client_id/client_secret)
+- Realistic login and consent pages (HTML)
+- Error page for OAuth errors and failures
+- CLI tooling to start server and set config
+- OpenAPI spec and documentation
+- Minimal setup, fast startup, CI/CD friendly
 
 ## Directory Structure
 ```
@@ -79,6 +83,38 @@ You can set these in your `.env` file, as environment variables, or override som
 > **Warning**
 > 
 > This server is intended for development and testing purposes only. It is not hardened for production use and should not be used to handle real user data or as a public-facing OAuth/OIDC provider.
+
+## Token Revocation and Introspection
+
+### /revoke (RFC 7009)
+Revokes an access token or refresh token. Requires client authentication (HTTP Basic Auth or client_id/client_secret in body).
+
+**Example:**
+```sh
+curl -X POST http://localhost:4000/revoke \
+  -u web-app:shhh \
+  -d token=ACCESS_OR_REFRESH_TOKEN
+```
+- `token_type_hint` (optional): Specify `access_token` or `refresh_token` to optimize lookup.
+- Always returns 200 OK, even if the token does not exist or is already revoked.
+
+### /introspect (RFC 7662)
+Returns metadata about an access or refresh token. Requires client authentication.
+
+**Example (access token):**
+```sh
+curl -X POST http://localhost:4000/introspect \
+  -u web-app:shhh \
+  -d token=ACCESS_TOKEN
+```
+**Example (refresh token):**
+```sh
+curl -X POST http://localhost:4000/introspect \
+  -u web-app:shhh \
+  -d token=REFRESH_TOKEN
+```
+- Response includes `active`, `scope`, `client_id`, `username`, `exp`, `iat`, `sub`, `aud`, `iss`, `token_type`.
+- Returns `{"active":false}` for invalid, expired, or revoked tokens.
 
 ## License
 MIT

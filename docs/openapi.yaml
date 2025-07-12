@@ -298,6 +298,76 @@ paths:
                 description: Empty object.
       security:
         - basicAuth: []
+  /introspect:
+    post:
+      summary: OAuth2 Token Introspection Endpoint
+      description: |
+        Returns metadata about an access token or refresh token as per RFC 7662. Requires client authentication via HTTP Basic Auth or by including client_id and client_secret in the request body. Both methods are supported, but only HTTP Basic Auth is formally documented in OpenAPI security schemes.
+      tags:
+        - OAuth2
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The token to introspect (access or refresh token).
+                token_type_hint:
+                  type: string
+                  enum: [access_token, refresh_token]
+                  description: Optional hint about the type of the token submitted for introspection.
+                client_id:
+                  type: string
+                  description: Client ID (if not using HTTP Basic Auth).
+                client_secret:
+                  type: string
+                  description: Client secret (if not using HTTP Basic Auth).
+              required:
+                - token
+      responses:
+        '200':
+          description: RFC 7662-compliant token introspection response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active:
+                    type: boolean
+                    description: Whether the token is active (not expired or revoked).
+                  scope:
+                    type: string
+                    description: Space-separated list of scopes granted to the token.
+                  client_id:
+                    type: string
+                    description: Client identifier for the token.
+                  username:
+                    type: string
+                    description: Username of the resource owner.
+                  exp:
+                    type: integer
+                    description: Expiry time (seconds since epoch).
+                  iat:
+                    type: integer
+                    description: Issued-at time (seconds since epoch).
+                  sub:
+                    type: string
+                    description: Subject of the token (usually username).
+                  aud:
+                    type: string
+                    description: Audience for the token (usually client_id).
+                  iss:
+                    type: string
+                    description: Issuer identifier.
+                  token_type:
+                    type: string
+                    enum: [access_token, refresh_token]
+                    description: Type of the token introspected.
+      security:
+        - basicAuth: []
 
 components:
   schemas:
