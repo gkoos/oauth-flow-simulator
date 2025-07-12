@@ -317,7 +317,11 @@ To enable developers and testers to interact with and inspect the mock OAuth ser
 
 2. **Consent Page**  
    - Displays requested scopes/permissions  
-   - Approve or deny consent  
+   - Approve or deny consent (realistic consent flow: only accepted consents are stored, denial does not persist)  
+   - If a user denies consent, they will be prompted again for the same scopes on future login attempts.  
+   - Consent is tracked per user, per client, and per scope.  
+   - If new scopes are requested, or a different client is used, the consent page will be shown again.  
+   - Simulator matches real OAuth2 server behavior for consent persistence and denial.  
    - Optionally configurable for auto-approval  
 
 3. **Error Page**  

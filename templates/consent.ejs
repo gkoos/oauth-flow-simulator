@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Consent - OAuth Flow Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="/logo.svg" alt="OAuth Flow Simulator Logo" width="220" height="70" />
+    </div>
+    <h2>Consent Required</h2>
+    <form method="post" action="/consent">
+      <input type="hidden" name="client_id" value="<%= client_id %>" />
+      <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>" />
+      <input type="hidden" name="state" value="<%= state %>" />
+      <input type="hidden" name="scope" value="<%= scope %>" />
+      <p>The application requests access to the following scopes:</p>
+      <ul>
+        <% scopes.forEach(function(scope) { %>
+          <li><%= scope %></li>
+        <% }); %>
+      </ul>
+      <button type="submit" name="action" value="accept">Allow</button>
+      <button type="submit" name="action" value="reject">Deny</button>
+    </form>
+  </div>
+</body>
+</html>

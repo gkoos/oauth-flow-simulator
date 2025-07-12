@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: OAuth Flow Simulator Management API
   version: 1.0.0
-  description: API for managing users, clients, and scopes at runtime.
+  description: API for managing users and clients (with per-client scopes) at runtime.
 servers:
   - url: http://localhost:4000
 paths:
@@ -35,6 +35,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '409':
+          description: Conflict - user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /sim/users/{username}:
     get:
       summary: Get a user by username
@@ -54,6 +63,13 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
     put:
       summary: Update a user
       operationId: updateUser
@@ -68,7 +84,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserInput'
+              type: object
+              properties:
+                password:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
       responses:
         '200':
           description: User updated
@@ -78,6 +101,13 @@ paths:
                 $ref: '#/components/schemas/User'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
     delete:
       summary: Delete a user
       operationId: deleteUser
@@ -92,6 +122,13 @@ paths:
           description: User deleted
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /sim/clients:
     get:
       summary: List all clients
@@ -121,6 +158,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Client'
+        '409':
+          description: Conflict - client already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /sim/clients/{clientId}:
     get:
       summary: Get a client by clientId
@@ -140,6 +186,13 @@ paths:
                 $ref: '#/components/schemas/Client'
         '404':
           description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
     put:
       summary: Update a client
       operationId: updateClient
@@ -154,7 +207,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ClientInput'
+              type: object
+              properties:
+                clientSecret:
+                  type: string
+                redirectUris:
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ClientScope'
       responses:
         '200':
           description: Client updated
@@ -164,6 +228,13 @@ paths:
                 $ref: '#/components/schemas/Client'
         '404':
           description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
     delete:
       summary: Delete a client
       operationId: deleteClient
@@ -178,133 +249,50 @@ paths:
           description: Client deleted
         '404':
           description: Client not found
-  /sim/scopes:
-    get:
-      summary: List all scopes
-      operationId: listScopes
-      responses:
-        '200':
-          description: List of scopes
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Scope'
-    post:
-      summary: Create a new scope
-      operationId: createScope
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScopeInput'
-      responses:
-        '201':
-          description: Scope created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scope'
-  /sim/scopes/{scope}:
-    get:
-      summary: Get a scope by name
-      operationId: getScope
-      parameters:
-        - in: path
-          name: scope
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Scope found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scope'
-        '404':
-          description: Scope not found
-    put:
-      summary: Update a scope
-      operationId: updateScope
-      parameters:
-        - in: path
-          name: scope
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ScopeInput'
-      responses:
-        '200':
-          description: Scope updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scope'
-        '404':
-          description: Scope not found
-    delete:
-      summary: Delete a scope
-      operationId: deleteScope
-      parameters:
-        - in: path
-          name: scope
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Scope deleted
-        '404':
-          description: Scope not found
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   schemas:
     User:
       type: object
-      required: [username, password, scopes]
+      required: [username, password]
       properties:
         username:
           type: string
         password:
           type: string
-        scopes:
-          type: array
-          items:
-            type: string
     UserInput:
       type: object
-      required: [username, password, scopes]
+      required: [username, password]
       properties:
         username:
           type: string
         password:
           type: string
+    Client:
+      type: object
+      required: [clientId, clientSecret, redirectUris, scopes]
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        redirectUris:
+          type: array
+          items:
+            type: string
         scopes:
           type: array
           items:
-            type: string
-    Client:
-      type: object
-      required: [clientId, clientSecret, redirectUris]
-      properties:
-        clientId:
-          type: string
-        clientSecret:
-          type: string
-        redirectUris:
-          type: array
-          items:
-            type: string
+            $ref: '#/components/schemas/ClientScope'
     ClientInput:
       type: object
-      required: [clientId, clientSecret, redirectUris]
+      required: [clientId, clientSecret, redirectUris, scopes]
       properties:
         clientId:
           type: string
@@ -314,19 +302,17 @@ components:
           type: array
           items:
             type: string
-    Scope:
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientScope'
+    ClientScope:
       type: object
-      required: [name, description]
+      required: [name, description, consentNeeded]
       properties:
         name:
           type: string
         description:
           type: string
-    ScopeInput:
-      type: object
-      required: [name, description]
-      properties:
-        name:
-          type: string
-        description:
-          type: string
+        consentNeeded:
+          type: boolean
