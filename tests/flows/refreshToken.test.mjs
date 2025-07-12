@@ -30,8 +30,6 @@ describe('Refresh Token Flow', () => {
     });
     // Always direct redirect, no consent needed
     const code = new URL(authRes.headers.location, 'http://localhost').searchParams.get('code');
-    console.log('Direct redirect:', authRes.headers.location);
-    console.log('Extracted code:', code);
     const tokenRes = await agent.post('/token').send({
       grant_type: 'authorization_code',
       code,
@@ -87,8 +85,6 @@ describe('Refresh Token Flow', () => {
     });
     // Always direct redirect, no consent needed
     const code2 = new URL(authRes.headers.location, 'http://localhost').searchParams.get('code');
-    console.log('Direct redirect:', authRes.headers.location);
-    console.log('Extracted code:', code2);
     const tokenRes = await agent.post('/token').send({
       grant_type: 'authorization_code',
       code: code2,
