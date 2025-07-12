@@ -219,6 +219,9 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/ClientScope'
+                refreshTokenLifetime:
+                  type: integer
+                  description: Lifetime of refresh tokens in milliseconds. If 0 or omitted, no expiry.
       responses:
         '200':
           description: Client updated
@@ -290,6 +293,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClientScope'
+        refreshTokenLifetime:
+          type: integer
+          description: Lifetime of refresh tokens in milliseconds. If 0 or omitted, no expiry.
     ClientInput:
       type: object
       required: [clientId, clientSecret, redirectUris, scopes]
@@ -306,6 +312,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClientScope'
+        refreshTokenLifetime:
+          type: integer
+          description: Lifetime of refresh tokens in milliseconds. If 0 or omitted, no expiry.
     ClientScope:
       type: object
       required: [name, description, consentNeeded]

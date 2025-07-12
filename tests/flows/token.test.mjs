@@ -70,3 +70,101 @@ describe('handleToken', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
 });
+
+describe('refresh token flow', () => {
+  let refreshTokens, tokens, users, getClient;
+  const clientId = 'web-app';
+  const clientSecret = 'shhh';
+  const username = 'alice';
+  const scopes = ['openid', 'offline_access'];
+  beforeEach(() => {
+    refreshTokens = {};
+    tokens = {};
+    users = [ { username, password: 'pw123', scopes } ];
+    getClient = jest.fn(() => ({ clientId, clientSecret, redirectUris: ['http://localhost:3000/callback'] }));
+  });
+  function issueRefreshToken() {
+    const now = Date.now();
+    const refresh_token = 'rtok_' + Math.random().toString(36).slice(2,10);
+    refreshTokens[refresh_token] = {
+      username,
+      clientId,
+      scopes,
+      issuedAt: now,
+      expiresAt: now + 10000
+    };
+    return refresh_token;
+  }
+  it('rotates refresh token and returns new tokens', () => {
+    const oldRefresh = issueRefreshToken();
+    const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ access_token: expect.any(String), refresh_token: expect.any(String) }));
+    expect(refreshTokens[oldRefresh]).toBeUndefined();
+    const newRefresh = res.json.mock.calls[0][0].refresh_token;
+    expect(refreshTokens[newRefresh]).toBeDefined();
+    expect(refreshTokens[newRefresh].username).toBe(username);
+  });
+  it('prevents replay of used refresh token', () => {
+    const oldRefresh = issueRefreshToken();
+    const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    // Try again with same token
+    const res2 = { status: jest.fn(() => res2), json: jest.fn() };
+    handleToken(req, res2, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    expect(res2.status).toHaveBeenCalledWith(400);
+    expect(res2.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
+  });
+  it('returns error for invalid refresh token', () => {
+    const req = { body: { grant_type: 'refresh_token', refresh_token: 'badtoken', client_id: clientId, client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
+  });
+  it('returns error for wrong client', () => {
+    const oldRefresh = issueRefreshToken();
+    const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: 'other-client', client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
+  });
+  it('returns error for expired refresh token', () => {
+    const now = Date.now();
+    const expiredRefresh = 'expired_' + Math.random().toString(36).slice(2,10);
+    refreshTokens[expiredRefresh] = {
+      username,
+      clientId,
+      scopes,
+      issuedAt: now - 20000,
+      expiresAt: now - 10000
+    };
+    const req = { body: { grant_type: 'refresh_token', refresh_token: expiredRefresh, client_id: clientId, client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
+    expect(refreshTokens[expiredRefresh]).toBeUndefined();
+  });
+  it('new refresh token metadata is correct', () => {
+    const oldRefresh = issueRefreshToken();
+    const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
+    const res = { status: jest.fn(() => res), json: jest.fn() };
+    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    const newRefresh = res.json.mock.calls[0][0].refresh_token;
+    const meta = refreshTokens[newRefresh];
+    expect(meta).toBeDefined();
+    expect(meta.username).toBe(username);
+    expect(meta.clientId).toBe(clientId);
+    expect(meta.scopes).toEqual(scopes);
+    expect(meta.issuedAt).toBeDefined();
+    if (meta.expiresAt) {
+      expect(meta.expiresAt).toBeGreaterThan(Date.now());
+    } else {
+      expect(meta.expiresAt).toBeNull();
+    }
+  });
+});
