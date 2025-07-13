@@ -14,6 +14,9 @@ describe('handleToken', () => {
         client_id: 'web-app',
         client_secret: 'shhh',
       },
+      protocol: 'http',
+      get: (header) => header === 'host' ? 'localhost:3000' : undefined,
+      socket: { localPort: 3000 }
     };
     res = { status: jest.fn(() => res), json: jest.fn() };
     getClient = jest.fn(() => ({

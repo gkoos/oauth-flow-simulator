@@ -493,6 +493,24 @@ paths:
                 properties:
                   error:
                     type: string
+  /sim/sessions:
+    get:
+      summary: List all active sessions
+      operationId: listSessions
+      responses:
+        '200':
+          description: List of sessions (tokens, auth codes, refresh tokens)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: object
+                  authCodes:
+                    type: object
+                  refreshTokens:
+                    type: object
 components:
   schemas:
     User:
