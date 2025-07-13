@@ -88,8 +88,19 @@ This phase brings the simulator to full OpenID Connect (OIDC) compatibility, ena
   - Supports custom and dynamic claims for advanced testing scenarios.
 
 - **`/userinfo` Endpoint Implementation**  
-  - Returns user profile information as per OIDC spec, including claims like `sub`, `name`, `email`, `preferred_username`, etc.
-  - Supports both Bearer token and POST authentication methods.
+  - Implements the OIDC `/userinfo` endpoint, returning user profile information in JSON format according to the OpenID Connect specification.
+  - Supports both Bearer token authentication (via `Authorization: Bearer <access_token>` header) and POST authentication (access token in the request body).
+  - Returns standard OIDC claims such as `sub` (subject identifier), `name`, `email`, `preferred_username`, `given_name`, `family_name`, and any additional claims configured in the simulator.
+  - Claims are dynamically generated based on the authenticated user and can be customized at runtime via the simulator’s configuration API.
+  - Validates the access token for authenticity, expiry, and required scopes (`openid` and optionally `profile`, `email`, etc.).
+  - Returns HTTP 401 Unauthorized for missing, invalid, or expired tokens, and HTTP 403 Forbidden for insufficient scopes.
+  - Supports error and delay injection for robust testing of client error handling and network latency scenarios.
+  - Fully documented in the OpenAPI spec, including example requests and responses for both authentication methods.
+  - Automated tests verify correct claim output, error handling, and runtime configurability.
+  - Example usage:
+    - `curl -H "Authorization: Bearer <access_token>" http://localhost:4000/userinfo`
+    - `curl -X POST -d "access_token=<access_token>" http://localhost:4000/userinfo`
+  - Enables advanced test scenarios, such as custom claims, simulated errors, and dynamic user profiles for OIDC client integration.
 
 - **Proof Key for Code Exchange (PKCE) Support**  
   - Implements PKCE for enhanced security in public clients (SPA, mobile).

@@ -168,6 +168,102 @@ paths:
                     type: array
                     items:
                       type: string
+  /authorize:
+    get:
+      summary: OAuth2 Authorization Endpoint
+      description: |
+        Initiates the OAuth2 authorization code flow. Accepts standard OAuth2 parameters via query string: response_type, client_id, redirect_uri, scope, state, and others as needed. Presents login and consent UI as appropriate.
+      tags:
+        - OAuth2
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [code]
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to client with authorization code or error.
+        '400':
+          description: Invalid request parameters.
+        '401':
+          description: Unauthorized (invalid client or user).
+        '403':
+          description: Consent denied.
+  /token:
+    post:
+      summary: OAuth2 Token Endpoint
+      description: |
+        Exchanges authorization code for access and refresh tokens. Accepts standard OAuth2 parameters via x-www-form-urlencoded body: grant_type, code, redirect_uri, client_id, client_secret, code_verifier (for PKCE), etc.
+      tags:
+        - OAuth2
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  enum: [authorization_code, refresh_token]
+                code:
+                  type: string
+                redirect_uri:
+                  type: string
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+                code_verifier:
+                  type: string
+              required:
+                - grant_type
+      responses:
+        '200':
+          description: Token response (access, refresh, and optionally ID token).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+                  refresh_token:
+                    type: string
+                  id_token:
+                    type: string
+        '400':
+          description: Invalid request or parameters.
+        '401':
+          description: Unauthorized (invalid client or code).
+        '403':
+          description: Consent denied or invalid scopes.
   /sim/users:
     get:
       summary: List all users
@@ -706,6 +802,29 @@ paths:
                 type: object
                 additionalProperties:
                   $ref: '#/components/schemas/DelaySimulation'
+  /userinfo:
+    get:
+      summary: Get user claims based on scopes
+      description: |
+        Returns user claims permitted by the scopes in the access token. Requires a valid Bearer token. Claims are omitted if not present for the user. Returns 403 if no permitted claims for provided scopes.
+      tags:
+        - OIDC
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response with user claims
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          description: Invalid or missing token
+        '403':
+          description: Insufficient scopes
+        '404':
+          description: User not found
 components:
   schemas:
     User:
@@ -819,3 +938,6 @@ components:
     basicAuth:
       type: http
       scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
