@@ -100,6 +100,63 @@ curl -X POST http://localhost:4000/introspect \
 - Response includes `active`, `scope`, `client_id`, `username`, `exp`, `iat`, `sub`, `aud`, `iss`, `token_type`.
 - Returns `{"active":false}` for invalid, expired, or revoked tokens.
 
+## OpenID Connect Discovery Endpoint (`/.well-known/openid-configuration`)
+
+The simulator implements the OIDC discovery endpoint at `/.well-known/openid-configuration`, returning a standards-compliant JSON document describing all OAuth2 and OIDC endpoints, supported features, and metadata. This document enables OIDC clients and libraries to auto-configure themselves for integration and testing.
+
+**What it returns:**
+- URLs for all major endpoints: `/authorize`, `/token`, `/userinfo`, `/jwks`, etc.
+- Supported response types, grant types, scopes, and claims
+- Server metadata: issuer, signing algorithms, subject types, etc.
+- Public JWKS for verifying ID tokens
+
+**Example usage:**
+```sh
+curl http://localhost:4000/.well-known/openid-configuration
+```
+
+**How it works:**
+- The endpoint is always up-to-date with the server's runtime configuration
+- All fields required by the OIDC spec are present
+- Can be used by any OIDC-compliant client for automated discovery
+
+---
+
+## Userinfo Endpoint (`/userinfo`) and Dynamic Claims Configuration
+
+The `/userinfo` endpoint returns user profile claims based on the scopes granted in the access token. It supports Bearer token authentication and is fully configurable at runtime.
+
+**How `/userinfo` works:**
+- Accepts a valid access token via `Authorization: Bearer <token>`
+- Returns only the claims permitted by the scopes in the token (e.g., `openid`, `profile`, `email`)
+- Claims are omitted if not present for the user
+- Returns 401 for invalid/missing tokens, 403 for insufficient scopes
+- Supports error and delay simulation for robust client testing
+
+**Configuring claims via API:**
+- Claim-to-scope mappings can be set globally, per client, or per user using the management API:
+  - `POST /sim/config/userinfo` (global config)
+  - `POST /sim/config/userinfo/clients/{clientId}` (per-client config)
+  - `POST /sim/config/userinfo/users/{userName}` (per-user config)
+- These endpoints accept a JSON object mapping scopes to claim lists
+- Changes take effect immediately and override defaults as needed
+
+**Example configuration:**
+```sh
+curl -X POST http://localhost:4000/sim/config/userinfo \
+  -H "Content-Type: application/json" \
+  -d '{"profile": ["name", "email", "preferred_username"]}'
+```
+
+**Example usage:**
+```sh
+curl -H "Authorization: Bearer <access_token>" http://localhost:4000/userinfo
+```
+
+See the OpenAPI spec for full details on request/response formats and error scenarios.
+
+---
+
 ## Delay Simulation for Testing
 
 Delay simulation lets you inject artificial latency into any major OAuth endpoint, making it easy to test client timeout handling, retry logic, and real-world network conditions. This is essential for validating how your application responds to slow or unreliable identity providers.

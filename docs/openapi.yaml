@@ -690,6 +690,83 @@ paths:
                 properties:
                   error:
                     type: string
+  /sim/config/userinfo:
+    get:
+      summary: Get all userinfo claims configuration
+      description: Returns the current userinfo claims configuration (global, per-client, per-user)
+      tags: [Server Management]
+      responses:
+        '200':
+          description: Current userinfo claims configuration
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      summary: Update global userinfo claims configuration
+      description: Updates the global userinfo claims-to-scope mapping
+      tags: [Server Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated global userinfo claims configuration
+          content:
+            application/json:
+              schema:
+                type: object
+  /sim/config/userinfo/clients/{clientId}:
+    post:
+      summary: Update userinfo claims for a client
+      description: Updates the userinfo claims-to-scope mapping for a specific client
+      tags: [Server Management]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated client userinfo claims configuration
+          content:
+            application/json:
+              schema:
+                type: object
+  /sim/config/userinfo/users/{userName}:
+    post:
+      summary: Update userinfo claims for a user
+      description: Updates the userinfo claims-to-scope mapping for a specific user
+      tags: [Server Management]
+      parameters:
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated user userinfo claims configuration
+          content:
+            application/json:
+              schema:
+                type: object
   /sim/config/errors:
     get:
       summary: Get all active error simulation objects
