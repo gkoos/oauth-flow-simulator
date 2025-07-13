@@ -349,5 +349,60 @@ Example claim configuration:
 
 See the API documentation and OpenAPI spec for full details on claim management endpoints and payload formats.
 
+## CLI Wrappers
+
+The OAuth Flow Simulator provides a powerful CLI for interacting with the mock server and its REST API endpoints. The CLI is designed for automation, scripting, and quick manual testing, and maps directly to the API endpoints for flexible usage.
+
+### How to Use the CLI
+
+- **Start the server:**
+  ```sh
+  npx oauth-sim start --port 4000
+  ```
+- **Call API endpoints:**
+  ```sh
+  npx oauth-sim api <verb> <path...> [--base-url <url>] [--body <json>]
+  ```
+  - `<verb>`: HTTP method (get, post, put, delete)
+  - `<path...>`: Path segments for the endpoint (e.g., `sim users alice` for `/sim/users/alice`)
+  - `--base-url`: Specify the server URL (default: `http://localhost:3000`)
+  - `--body`: JSON string for POST/PUT requests
+
+#### Examples
+- **Get a user:**
+  ```sh
+  npx oauth-sim api get sim users alice --base-url http://localhost:4000
+  ```
+- **Add a user:**
+  ```sh
+  npx oauth-sim api post sim users --base-url http://localhost:4000 --body '{"username":"bob","password":"pw456"}'
+  ```
+- **Revoke a token:**
+  ```sh
+  npx oauth-sim api post revoke --base-url http://localhost:4000 --body '{"token":"ACCESS_TOKEN"}'
+  ```
+- **Introspect a token:**
+  ```sh
+  npx oauth-sim api post introspect --base-url http://localhost:4000 --body '{"token":"ACCESS_TOKEN"}'
+  ```
+
+### How CLI Maps to API Endpoints
+- The CLI `api` command takes the HTTP verb and path segments and constructs the corresponding REST API call.
+- For example, `npx oauth-sim api get sim users alice` maps to `GET /sim/users/alice`.
+- For POST/PUT requests, use `--body` to provide the JSON payload.
+- The CLI supports all major endpoints, including `/sim/users`, `/sim/clients`, `/sim/scopes`, `/token`, `/revoke`, `/introspect`, and error/delay simulation endpoints.
+
+### When to Use the CLI
+- **Automated testing:** Script API calls for integration and CI workflows.
+- **Manual testing:** Quickly query or modify users, clients, tokens, or config from the command line.
+- **Scripting:** Use in shell scripts or npm scripts for setup/teardown of test environments.
+- **Config management:** Dynamically inject errors, delays, or JWT claims for specific endpoints during tests.
+
+### Tips
+- Use `--base-url` to target a running server on a custom port or host.
+- Always provide valid JSON for `--body` (the CLI will validate and parse it).
+- The CLI does not start the server for API commands; ensure the server is running before making API calls.
+- For advanced usage, combine CLI calls with curl, Postman, or other tools for full coverage.
+
 ## License
 MIT
