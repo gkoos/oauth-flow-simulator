@@ -511,6 +511,62 @@ paths:
                     type: object
                   refreshTokens:
                     type: object
+  /sim/config/errors:
+    get:
+      summary: Get all active error simulation objects
+      operationId: getErrorSimulations
+      tags:
+        - Error Simulation
+      responses:
+        '200':
+          description: List of error simulation objects
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/ErrorSimulation'
+    post:
+      summary: Set or update an error simulation for a target
+      operationId: setErrorSimulation
+      tags:
+        - Error Simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorSimulationInput'
+      responses:
+        '200':
+          description: Error simulation set
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/ErrorSimulation'
+    delete:
+      summary: Delete error simulation(s)
+      operationId: deleteErrorSimulation
+      tags:
+        - Error Simulation
+      parameters:
+        - in: query
+          name: target
+          required: false
+          schema:
+            type: string
+            description: Target endpoint (e.g. '/token' or 'all')
+      responses:
+        '200':
+          description: Error simulation(s) deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/ErrorSimulation'
 components:
   schemas:
     User:
@@ -577,6 +633,31 @@ components:
           type: string
         consentNeeded:
           type: boolean
+    ErrorSimulation:
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        error_description:
+          type: string
+    ErrorSimulationInput:
+      type: object
+      required:
+        - target
+        - status
+        - error
+      properties:
+        target:
+          type: string
+          description: Target endpoint (e.g. '/token' or 'all')
+        status:
+          type: integer
+        error:
+          type: string
+        error_description:
+          type: string
   securitySchemes:
     basicAuth:
       type: http

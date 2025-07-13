@@ -131,15 +131,63 @@ Supported endpoints: `/authorize`, `/token`, `/revoke`, `/introspect`
 
 ## Error Injection for Testing
 
-Error injection lets you simulate OAuth2 and OIDC error responses for any major endpoint, making it easy to test client error handling, edge cases, and custom flows.
+Error injection lets you simulate OAuth2 and OIDC error responses for any major endpoint, making it easy to test client error handling, edge cases, and custom flows. This is essential for validating how your application responds to failures, misconfigurations, and rate limits—without needing to manipulate your real identity provider or network.
 
-### How Error Injection Works
-- Add error injection parameters to the query string of your request.
-- The simulator will respond with the specified error code and description, following the OAuth2 spec for each endpoint.
-- Error injection is supported for `/authorize`, `/login`, `/token`, `/revoke`, and `/introspect`.
-- All error injection events are highlighted in the server logs (in red) for visibility.
+### Two Ways to Inject Errors
 
-### Error Injection Parameters
+There are two supported methods for error injection:
+
+1. **Query Parameter Method**
+   - Add error injection parameters directly to your request's query string.
+   - Best for ad-hoc, manual, or one-off testing (e.g., using curl, Postman, or browser).
+   - Does not persist—only affects the current request.
+
+2. **REST API Method**
+   - Use the `/sim/config/errors` REST API to configure error injection for specific endpoints or globally.
+   - Best for automated tests, CI/CD, or simulating persistent error conditions (e.g., simulating a rate limiter by returning 429 for all requests).
+   - Persists until cleared via the API.
+
+#### When to Use Each Method
+- **Query Parameter:** Quick, targeted error simulation for a single request. Ideal for manual testing or debugging.
+- **REST API:** Persistent error simulation for one or more endpoints. Ideal for automated tests, integration testing, or simulating global failures (e.g., force all `/token` requests to fail with `invalid_client`).
+
+---
+
+### Error Injection via REST API
+
+The `/sim/config/errors` API lets you configure error injection at runtime:
+- **Targeting:**
+  - Set errors for a specific endpoint (e.g., `/token`, `/authorize`, `/login`, etc.)
+  - Or set a global error for all endpoints using the target `all`.
+- **Precedence:**
+  - If both a global (`all`) and a specific endpoint error are set, the specific endpoint takes precedence.
+- **Operations:**
+  - `GET /sim/config/errors`: List current error injection settings.
+  - `POST /sim/config/errors`: Add or update error injection for a target.
+  - `DELETE /sim/config/errors/{target}`: Remove error injection for a target.
+
+**Example: Simulate a rate limiter (429) for all endpoints**
+```sh
+curl -X POST http://localhost:4000/sim/config/errors \
+  -H "Content-Type: application/json" \
+  -d '{ "target": "all", "error": "rate_limited", "status": 429, "error_description": "Too many requests" }'
+```
+
+**Example: Inject an error only for /token**
+```sh
+curl -X POST http://localhost:4000/sim/config/errors \
+  -H "Content-Type: application/json" \
+  -d '{ "target": "/token", "error": "invalid_client", "error_description": "Simulated client error" }'
+```
+
+**Example: Remove error injection for /token**
+```sh
+curl -X DELETE http://localhost:4000/sim/config/errors/token
+```
+
+---
+
+### Error Injection via Query Parameters
 - For `/authorize`:
   - `authorize_force_error`: The OAuth2 error code to inject (e.g. `invalid_request`, `access_denied`, etc.)
   - `authorize_error_description`: Optional error description
