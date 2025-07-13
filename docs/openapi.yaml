@@ -567,6 +567,62 @@ paths:
                 type: object
                 additionalProperties:
                   $ref: '#/components/schemas/ErrorSimulation'
+  /sim/config/delays:
+    get:
+      summary: Get all active delay simulation objects
+      operationId: getDelaySimulations
+      tags:
+        - Delay Simulation
+      responses:
+        '200':
+          description: List of delay simulation objects
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/DelaySimulation'
+    post:
+      summary: Set or update a delay simulation for a target
+      operationId: setDelaySimulation
+      tags:
+        - Delay Simulation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DelaySimulationInput'
+      responses:
+        '200':
+          description: Delay simulation set
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/DelaySimulation'
+    delete:
+      summary: Delete delay simulation(s)
+      operationId: deleteDelaySimulation
+      tags:
+        - Delay Simulation
+      parameters:
+        - in: query
+          name: target
+          required: false
+          schema:
+            type: string
+            description: Target endpoint (e.g. '/token' or 'all')
+      responses:
+        '200':
+          description: Delay simulation(s) deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/DelaySimulation'
 components:
   schemas:
     User:
@@ -658,6 +714,24 @@ components:
           type: string
         error_description:
           type: string
+    DelaySimulation:
+      type: object
+      properties:
+        delay:
+          type: integer
+          description: Delay in milliseconds
+    DelaySimulationInput:
+      type: object
+      required:
+        - target
+        - delay
+      properties:
+        target:
+          type: string
+          description: Target endpoint (e.g. '/token' or 'all')
+        delay:
+          type: integer
+          description: Delay in milliseconds
   securitySchemes:
     basicAuth:
       type: http

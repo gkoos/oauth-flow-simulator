@@ -26,25 +26,8 @@ npx oauth-sim start --port 4000
 - CLI tooling to start server and set config
 - OpenAPI spec and documentation
 - Minimal setup, fast startup, CI/CD friendly
-- Configurable delay injection for any endpoint (`/authorize`, `/token`, `/revoke`, `/introspect`) via `?delay=ms` query param for simulating network latency
-
-## Directory Structure
-```
-oauth-flow-simulator/
-├── bin/
-│   └── oauth-sim.js        # CLI entry point
-├── lib/
-│   └── index.js            # Core logic for programmatic use
-├── cli/
-│   └── commands.js         # Handles CLI options
-├── templates/
-│   ├── login.html          # Login UI
-│   └── error.html          # Error UI
-├── examples/
-│   └── usage.js            # Sample programmatic usage
-├── package.json
-└── README.md
-```
+- Configurable delay injection for any endpoint (via query parameter or REST API; supports per-endpoint and global delays)
+- Configurable error injection for any endpoint (via query parameter or REST API; supports per-endpoint and global errors)
 
 ## HTTPS and Cookie Security
 
@@ -117,17 +100,92 @@ curl -X POST http://localhost:4000/introspect \
 - Response includes `active`, `scope`, `client_id`, `username`, `exp`, `iat`, `sub`, `aud`, `iss`, `token_type`.
 - Returns `{"active":false}` for invalid, expired, or revoked tokens.
 
-## Delay Injection for Testing
+## Delay Simulation for Testing
 
-You can simulate network latency on any major OAuth endpoint by adding a `delay` query parameter (in milliseconds):
+Delay simulation lets you inject artificial latency into any major OAuth endpoint, making it easy to test client timeout handling, retry logic, and real-world network conditions. This is essential for validating how your application responds to slow or unreliable identity providers.
 
-**Example:**
+### Two Ways to Simulate Delays
+
+There are two supported methods for delay simulation:
+
+1. **Query Parameter Method**
+   - Add a `delay` parameter (in milliseconds) directly to your request's query string.
+   - Best for ad-hoc, manual, or one-off testing (e.g., using curl, Postman, or browser).
+   - Does not persist—only affects the current request.
+
+2. **REST API Method**
+   - Use the `/sim/config/delays` REST API to configure delay simulation for specific endpoints or globally.
+   - Best for automated tests, CI/CD, or simulating persistent network latency (e.g., simulating a slow identity provider).
+   - Persists until cleared via the API.
+
+#### When to Use Each Method
+- **Query Parameter:** Quick, targeted delay simulation for a single request. Ideal for manual testing or debugging.
+- **REST API:** Persistent delay simulation for one or more endpoints. Ideal for automated tests, integration testing, or simulating global latency (e.g., force all `/token` requests to respond slowly).
+
+---
+
+### Delay Simulation via REST API
+
+The `/sim/config/delays` API lets you configure delay simulation at runtime:
+- **Targeting:**
+  - Set delays for a specific endpoint (e.g., `/token`, `/authorize`, `/login`, etc.)
+  - Or set a global delay for all endpoints using the target `all`.
+- **Precedence:**
+  - If both a global (`all`) and a specific endpoint delay are set, the specific endpoint takes precedence.
+- **Operations:**
+  - `GET /sim/config/delays`: List current delay simulation settings.
+  - `POST /sim/config/delays`: Add or update delay simulation for a target.
+  - `DELETE /sim/config/delays?target={target}`: Remove delay simulation for a target. If no target is specified, all delays are cleared.
+
+**Example: Simulate a 5s delay for all endpoints**
 ```sh
-curl -X POST "http://localhost:4000/token?delay=1000" -d ...
+curl -X POST http://localhost:4000/sim/config/delays \
+  -H "Content-Type: application/json" \
+  -d '{ "target": "all", "delay": 5000 }'
 ```
-This will delay the response by 1 second. Maximum allowed delay is 30 seconds.
 
-Supported endpoints: `/authorize`, `/token`, `/revoke`, `/introspect`
+**Example: Simulate a 7s delay only for /token**
+```sh
+curl -X POST http://localhost:4000/sim/config/delays \
+  -H "Content-Type: application/json" \
+  -d '{ "target": "/token", "delay": 7000 }'
+```
+
+**Example: Remove delay simulation for /token**
+```sh
+curl -X DELETE "http://localhost:4000/sim/config/delays?target=%2Ftoken"
+```
+
+**Example: Remove all delay simulations**
+```sh
+curl -X DELETE "http://localhost:4000/sim/config/delays"
+```
+
+---
+
+### Delay Simulation via Query Parameter
+- Add `?delay=ms` to any supported endpoint (in milliseconds, max 30,000).
+- Example:
+  ```sh
+  curl -X POST "http://localhost:4000/token?delay=1000" -d ...
+  ```
+  This will delay the response by 1 second.
+
+### Supported Endpoints
+Delay simulation is supported for:
+- `/authorize`
+- `/token`
+- `/revoke`
+- `/introspect`
+- `/login`
+
+### Logging
+All delay simulation events are highlighted in the server logs as:
+```
+DELAY SIMULATION - delay=...ms target=...
+```
+
+This makes it easy to spot delay-injected requests during development and testing.
 
 ## Error Injection for Testing
 
