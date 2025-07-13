@@ -6,259 +6,6 @@ info:
 servers:
   - url: http://localhost:4000
 paths:
-  /sim/users:
-    get:
-      summary: List all users
-      operationId: listUsers
-      responses:
-        '200':
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-    post:
-      summary: Create a new user
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
-      responses:
-        '201':
-          description: User created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '409':
-          description: Conflict - user already exists
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  /sim/users/{username}:
-    get:
-      summary: Get a user by username
-      operationId: getUser
-      parameters:
-        - in: path
-          name: username
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: User found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-    put:
-      summary: Update a user
-      operationId: updateUser
-      parameters:
-        - in: path
-          name: username
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                password:
-                  type: string
-                scopes:
-                  type: array
-                  items:
-                    type: string
-      responses:
-        '200':
-          description: User updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-    delete:
-      summary: Delete a user
-      operationId: deleteUser
-      parameters:
-        - in: path
-          name: username
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: User deleted
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  /sim/clients:
-    get:
-      summary: List all clients
-      operationId: listClients
-      responses:
-        '200':
-          description: List of clients
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Client'
-    post:
-      summary: Create a new client
-      operationId: createClient
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ClientInput'
-      responses:
-        '201':
-          description: Client created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Client'
-        '409':
-          description: Conflict - client already exists
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-  /sim/clients/{clientId}:
-    get:
-      summary: Get a client by clientId
-      operationId: getClient
-      parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Client found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Client'
-        '404':
-          description: Client not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-    put:
-      summary: Update a client
-      operationId: updateClient
-      parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                clientSecret:
-                  type: string
-                redirectUris:
-                  type: array
-                  items:
-                    type: string
-                scopes:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ClientScope'
-                refreshTokenLifetime:
-                  type: integer
-                  description: Lifetime of refresh tokens in milliseconds. If 0 or omitted, no expiry.
-      responses:
-        '200':
-          description: Client updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Client'
-        '404':
-          description: Client not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-    delete:
-      summary: Delete a client
-      operationId: deleteClient
-      parameters:
-        - in: path
-          name: clientId
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Client deleted
-        '404':
-          description: Client not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
   /revoke:
     post:
       summary: OAuth2 Token Revocation Endpoint
@@ -368,10 +115,358 @@ paths:
                     description: Type of the token introspected.
       security:
         - basicAuth: []
+  /.well-known/openid-configuration:
+    get:
+      summary: Get OIDC discovery document
+      description: Returns the OpenID Connect discovery document describing all OAuth2/OIDC endpoints and supported features.
+      operationId: getOIDCDiscovery
+      tags:
+        - OIDC
+      responses:
+        '200':
+          description: OIDC discovery document
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issuer:
+                    type: string
+                  authorization_endpoint:
+                    type: string
+                  token_endpoint:
+                    type: string
+                  userinfo_endpoint:
+                    type: string
+                  jwks_uri:
+                    type: string
+                  response_types_supported:
+                    type: array
+                    items:
+                      type: string
+                  subject_types_supported:
+                    type: array
+                    items:
+                      type: string
+                  id_token_signing_alg_values_supported:
+                    type: array
+                    items:
+                      type: string
+                  scopes_supported:
+                    type: array
+                    items:
+                      type: string
+                  grant_types_supported:
+                    type: array
+                    items:
+                      type: string
+                  claims_supported:
+                    type: array
+                    items:
+                      type: string
+                  token_endpoint_auth_methods_supported:
+                    type: array
+                    items:
+                      type: string
+  /sim/users:
+    get:
+      summary: List all users
+      operationId: listUsers
+      tags:
+        - Server Management
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create a new user
+      operationId: createUser
+      tags:
+        - Server Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: Conflict - user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/users/{username}:
+    get:
+      summary: Get a user by username
+      operationId: getUser
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      summary: Update a user
+      operationId: updateUser
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a user
+      operationId: deleteUser
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/clients:
+    get:
+      summary: List all clients
+      operationId: listClients
+      tags:
+        - Server Management
+      responses:
+        '200':
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+    post:
+      summary: Create a new client
+      operationId: createClient
+      tags:
+        - Server Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '409':
+          description: Conflict - client already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/clients/{clientId}:
+    get:
+      summary: Get a client by clientId
+      operationId: getClient
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      summary: Update a client
+      operationId: updateClient
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                clientSecret:
+                  type: string
+                redirectUris:
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ClientScope'
+                refreshTokenLifetime:
+                  type: integer
+                  description: Lifetime of refresh tokens in milliseconds. If 0 or omitted, no expiry.
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      summary: Delete a client
+      operationId: deleteClient
+      tags:
+        - Server Management
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Client deleted
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /sim/sessions:
+    get:
+      summary: List all active sessions
+      operationId: listSessions
+      tags:
+        - Server Management
+      responses:
+        '200':
+          description: List of sessions (tokens, auth codes, refresh tokens)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokens:
+                    type: object
+                  authCodes:
+                    type: object
+                  refreshTokens:
+                    type: object
   /sim/config/jwt:
     get:
       summary: Get all JWT claims configuration
       operationId: getAllJWTClaims
+      tags:
+        - Server Management
       responses:
         '200':
           description: All JWT claims (globals, clients, users)
@@ -389,6 +484,8 @@ paths:
     post:
       summary: Update global JWT claims configuration
       operationId: updateGlobalJWTClaims
+      tags:
+        - Server Management
       requestBody:
         required: true
         content:
@@ -421,6 +518,8 @@ paths:
     post:
       summary: Update JWT claims for a client
       operationId: updateClientJWTClaims
+      tags:
+        - Server Management
       parameters:
         - in: path
           name: clientId
@@ -459,6 +558,8 @@ paths:
     post:
       summary: Update JWT claims for a user
       operationId: updateUserJWTClaims
+      tags:
+        - Server Management
       parameters:
         - in: path
           name: userName
@@ -493,24 +594,6 @@ paths:
                 properties:
                   error:
                     type: string
-  /sim/sessions:
-    get:
-      summary: List all active sessions
-      operationId: listSessions
-      responses:
-        '200':
-          description: List of sessions (tokens, auth codes, refresh tokens)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tokens:
-                    type: object
-                  authCodes:
-                    type: object
-                  refreshTokens:
-                    type: object
   /sim/config/errors:
     get:
       summary: Get all active error simulation objects
