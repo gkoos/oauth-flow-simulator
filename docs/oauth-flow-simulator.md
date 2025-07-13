@@ -73,16 +73,51 @@ A lightweight, developer-friendly OAuth2 and OpenID Connect (OIDC) mock server f
 
 ### Phase 3: Full OIDC Compliance
 
-- OpenID Connect Discovery endpoint (`/.well-known/openid-configuration`)  
-- ID token generation with OIDC standard claims (sub, name, email, nonce)  
-- `/userinfo` endpoint implementation  
-- Proof Key for Code Exchange (PKCE) support  
-- Consent screen UI with approval/denial toggles  
-- Discovery metadata UI (human-readable OIDC config page)  
-- Validation against major OpenID clients (Auth0, AppAuth)  
-- Support for multiple grant types (client credentials, implicit if desired)  
+This phase brings the simulator to full OpenID Connect (OIDC) compatibility, enabling robust testing and integration for any OIDC-compliant client or service. Key deliverables and features include:
 
-**Goals:** Achieve full compliance with OIDC specs. Support typical real-world OAuth/OIDC client scenarios.
+- **OpenID Connect Discovery Endpoint (`/.well-known/openid-configuration`)**  
+  - This endpoint provides a standardized JSON document (the OIDC discovery document) that describes all the OAuth2 and OIDC endpoints exposed by the simulator, such as `/authorize`, `/token`, `/userinfo`, `/jwks`, and more.
+  - The document includes metadata about supported authentication flows, response types, grant types, scopes, and the server's public signing keys (JWKS).
+  - OIDC clients and libraries use this endpoint to automatically configure themselves, discover available features, and obtain the necessary URLs and keys for secure communication.
+  - The discovery document is required by the OIDC specification and is essential for interoperability with third-party clients, SDKs, and identity platforms.
+  - Example fields in the document include: `issuer`, `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`, `jwks_uri`, `response_types_supported`, `subject_types_supported`, `id_token_signing_alg_values_supported`, and more.
+  - By implementing this endpoint, the simulator can be used as a drop-in replacement for real OIDC providers in automated tests, development, and integration scenarios.
+
+- **ID Token Generation with OIDC Standard Claims**  
+  - Issues signed JWT ID tokens containing all required OIDC claims: `sub`, `name`, `email`, `nonce`, `aud`, `iss`, `exp`, `iat`, etc.
+  - Supports custom and dynamic claims for advanced testing scenarios.
+
+- **`/userinfo` Endpoint Implementation**  
+  - Returns user profile information as per OIDC spec, including claims like `sub`, `name`, `email`, `preferred_username`, etc.
+  - Supports both Bearer token and POST authentication methods.
+
+- **Proof Key for Code Exchange (PKCE) Support**  
+  - Implements PKCE for enhanced security in public clients (SPA, mobile).
+  - Supports both `S256` and `plain` code challenge methods.
+  - Validates code verifier during token exchange.
+
+- **Consent Screen UI with Approval/Denial Toggles**  
+  - Presents requested scopes and claims to the user for approval or denial.
+  - Tracks consent per user, client, and scope, with realistic persistence and re-prompting behavior.
+  - Allows users to deny consent, triggering appropriate OAuth/OIDC error responses.
+
+- **Discovery Metadata UI (Human-Readable OIDC Config Page)**  
+  - Provides a web page rendering the discovery document in a readable format for manual inspection and debugging.
+  - Highlights supported endpoints, claims, and signing keys.
+
+- **Validation Against Major OpenID Clients (Auth0, AppAuth, etc.)**  
+  - Runs automated and manual tests against popular OIDC client libraries and platforms.
+  - Ensures compatibility with real-world client implementations and edge cases.
+
+- **Support for Multiple Grant Types**  
+  - Adds support for additional OAuth2 grant types: `client_credentials`, `implicit` (if desired), and others as needed.
+  - Enables broader testing scenarios, including machine-to-machine and legacy flows.
+
+**Goals:**
+- Achieve full compliance with OIDC specifications, including all required endpoints, claims, and flows.
+- Enable seamless integration and testing with any OIDC client, library, or service.
+- Provide realistic consent, error, and token handling for robust end-to-end scenarios.
+- Ensure the simulator can be used for both manual and automated OIDC testing, including advanced features like PKCE and dynamic claims.
 
 ---
 
