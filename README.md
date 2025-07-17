@@ -461,5 +461,39 @@ The OAuth Flow Simulator provides a powerful CLI for interacting with the mock s
 - The CLI does not start the server for API commands; ensure the server is running before making API calls.
 - For advanced usage, combine CLI calls with curl, Postman, or other tools for full coverage.
 
+## PKCE (Proof Key for Code Exchange) Support
+
+The OAuth Flow Simulator fully supports the PKCE (Proof Key for Code Exchange) extension for OAuth2 Authorization Code flows, as recommended for public clients and mobile/native apps. PKCE enhances security by mitigating authorization code interception attacks.
+
+### How PKCE Works in the Simulator
+- The `/authorize` endpoint accepts `code_challenge` and `code_challenge_method` parameters (supports `S256` and `plain`).
+- The `/token` endpoint requires the corresponding `code_verifier` when exchanging an authorization code if PKCE was used during authorization.
+- The simulator validates the code challenge and code verifier according to RFC 7636:
+  - For `S256`, the code verifier is SHA-256 hashed and base64url-encoded, then compared to the original challenge.
+  - For `plain`, the code verifier must exactly match the challenge.
+- PKCE is enforced for clients that do not use a client secret, but can be used by any client for testing.
+- All PKCE logic is implemented in-memory for fast, stateless testing and can be configured per client.
+
+### Example PKCE Flow
+1. **Start Authorization Request:**
+   ```sh
+   curl "http://localhost:4000/authorize?response_type=code&client_id=web-app&redirect_uri=http://localhost:3000/callback&scope=openid&code_challenge=abc123&code_challenge_method=S256"
+   ```
+2. **Exchange Code for Token:**
+   ```sh
+   curl -X POST http://localhost:4000/token \
+     -d grant_type=authorization_code \
+     -d code=AUTH_CODE \
+     -d redirect_uri=http://localhost:3000/callback \
+     -d client_id=web-app \
+     -d code_verifier=xyz456
+   ```
+
+### Implementation Details
+- PKCE parameters are stored with the authorization code in the in-memory store.
+- The `/token` endpoint checks the code verifier against the stored challenge and method before issuing tokens.
+- Error responses follow RFC 7636 for invalid or missing PKCE parameters.
+- PKCE support is documented in the OpenAPI spec and can be tested via curl, Postman, or the CLI.
+
 ## License
 MIT

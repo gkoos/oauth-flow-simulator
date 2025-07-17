@@ -528,3 +528,115 @@ To enable developers and testers to interact with and inspect the mock OAuth ser
 - Initial Author: Gabor Koos  
 - GitHub: [gkoos/oauth-flow-simulator]  
 - Contact: [your email or Discord]
+
+
+1. Configure server to use public key signing or not:
+Yes, a config option (env var or config file) to toggle between symmetric (HS256) and asymmetric (RS256/ES256) signing.
+
+2. If not using public key, use JWT_SECRET as now:
+Correct, keep current logic for HS256.
+
+3. /sim/config/keys endpoint for key management:
+
+Typical fields: { kid, private, public, alg } (alg = algorithm, e.g., RS256).
+You may want CRUD endpoints:
+GET /sim/keys (list all keys)
+POST /sim/keys (create new key)
+GET /sim/keys/{kid} (fetch key by kid)
+DELETE /sim/keys/{kid} (delete key)
+POST /sim/keys/active/{kid} (set active key for signing)
+4. Config option to include/exclude kid in JWT header:
+Yes, this is useful for testing client behavior.
+
+5. JWT signing logic:
+
+If symmetric: use secret.
+If asymmetric: use active key, set kid in header if configured.
+6. JWT verification logic:
+
+In your flow, verification happens in token.js (for introspection, expiry checks, etc.).
+Use secret for HS256, public key for RS256/ES256, select by kid if present.
+7. /jwks endpoint:
+
+Standard format: JSON object with a keys array, each key is a JWK (JSON Web Key).
+Example:
+{
+  "keys": [
+    {
+      "kty": "RSA",      // Key Type: "RSA" for RSA keys. Value comes from the key algorithm.
+      "kid": "abc123",   // Key ID: Unique identifier for the key. Value is generated when the key is created.
+      "alg": "RS256",    // Algorithm: Intended signing algorithm, e.g., "RS256". Value is set by server config or key generation.
+      "use": "sig",      // Usage: "sig" means the key is for signing JWTs. Value is set by server config.
+      "n": "...",        // Modulus: Base64url-encoded modulus of the RSA public key. Value comes from the generated RSA key.
+      "e": "AQAB"        // Exponent: Base64url-encoded public exponent (usually "AQAB" for 65537). Value comes from the generated RSA key.
+    }
+  ]
+}
+
+Field Explanations:
+
+kty (Key Type): Specifies the cryptographic algorithm family. For RSA keys, this is "RSA".
+Value source: Key generation algorithm.
+kid (Key ID): Unique identifier for the key, used in JWT headers to select the correct key for verification.
+Value source: Generated when the key is created (random or hash of key).
+alg (Algorithm): Intended algorithm for the key, e.g., "RS256" for RSA with SHA-256.
+Value source: Server config or key generation.
+use (Usage): Indicates the intended use of the key, "sig" for signature.
+Value source: Server config.
+n (Modulus): The base64url-encoded modulus of the RSA public key.
+Value source: Generated RSA key.
+e (Exponent): The base64url-encoded public exponent. "AQAB" is common for 65537.
+Value source: Generated RSA key.
+Where do these values come from?
+
+All values except kid are derived from the cryptographic key itself (when generated).
+kid is assigned by the server when the key is created, and should be unique.
+Behavior when asymmetric JWT signing is not used:
+
+If the server is configured to use symmetric signing (HS256, with a shared secret), the /jwks endpoint should return a 404 Not Found response, indicating that no public keys are available for verification.
+
+Example key:
+{
+  "kid": "abc123",
+  "kty": "RSA",
+  "alg": "RS256",
+  "use": "sig",
+  "n": "sXchQwK1...base64url-encoded-modulus...",
+  "e": "AQAB",
+  "d": "MIIEvgIBADAN...base64url-encoded-private-exponent...",
+  "p": "7v1...base64url...",
+  "q": "w9A...base64url...",
+  "dp": "Gk...base64url...",
+  "dq": "Jk...base64url...",
+  "qi": "Vg...base64url...",
+  "private": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BA...full PEM...\n-----END PRIVATE KEY-----",
+  "public": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BA...full PEM...\n-----END PUBLIC KEY-----"
+}
+
+in /jwks
+for each key, you return:
+kid
+kty
+alg
+use
+n
+e
+You do not return:
+d, p, q, dp, dq, qi, private, or public (PEM)
+See RFC 7517 for details.
+Other considerations:
+
+Key rotation: support multiple keys, mark one as active.
+When rotating, keep old keys in JWKS for token verification until all old tokens expire.
+For testing, allow manual key creation/import (for deterministic results).
+Summary:
+Your list is complete for a simulator. The only addition is supporting key rotation and keeping old keys in JWKS for backward compatibility. Otherwise, your endpoints and logic cover all standard OIDC/JWT key management and signing needs.
+
+
+key generation endpoint:
+- `POST /sim/keys/generate`
+alg: Algorithm (e.g., "RS256", "ES256"). Determines key type and size.
+kty: Key type ("RSA", "EC"). Usually inferred from alg, but can be explicit.
+kid: Optional key ID. If omitted, server generates one.
+keySize: For RSA, key size in bits (e.g., 2048, 4096). Optional, defaults to 2048.
+curve: For EC keys, curve name (e.g., "P-256", "P-384"). Optional, defaults to "P-256".
