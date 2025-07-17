@@ -103,9 +103,47 @@ This phase brings the simulator to full OpenID Connect (OIDC) compatibility, ena
   - Enables advanced test scenarios, such as custom claims, simulated errors, and dynamic user profiles for OIDC client integration.
 
 - **Proof Key for Code Exchange (PKCE) Support**  
-  - Implements PKCE for enhanced security in public clients (SPA, mobile).
-  - Supports both `S256` and `plain` code challenge methods.
-  - Validates code verifier during token exchange.
+  PKCE (Proof Key for Code Exchange) is a security extension to OAuth2 and OIDC that protects public clients (such as SPAs and mobile apps) from authorization code interception attacks. The simulator fully supports PKCE for realistic client testing and compliance.
+
+  - **What is PKCE?**
+    - PKCE requires clients to generate a random `code_verifier` and a derived `code_challenge` during the authorization request.
+    - The `code_challenge` is sent with the initial `/authorize` request, and the `code_verifier` is sent during the `/token` exchange.
+    - The server validates that the `code_verifier` matches the original `code_challenge` using the specified method (`S256` or `plain`).
+    - This prevents malicious apps or attackers from exchanging stolen authorization codes for tokens.
+
+  - **Simulator Implementation:**
+    - Supports both `S256` (SHA-256 hash) and `plain` code challenge methods, as per the PKCE spec.
+    - Validates the `code_verifier` during the `/token` exchange. If the verifier does not match, returns an OAuth2 error (`invalid_grant`).
+    - Handles all PKCE parameters: `code_challenge`, `code_challenge_method`, and `code_verifier`.
+    - Works with any OAuth2/OIDC client library that supports PKCE.
+    - PKCE is optional for confidential clients, but required for public clients in most real-world scenarios.
+
+  - **Example Usage:**
+    1. **Start Authorization Request with PKCE:**
+       ```sh
+       # Generate code_verifier and code_challenge (S256)
+       code_verifier="randomstring123"
+       code_challenge=$(echo -n "$code_verifier" | openssl dgst -sha256 -binary | openssl base64 | tr -d '=\n' | tr '/+' '_-')
+       curl "http://localhost:4000/authorize?response_type=code&client_id=web-app&redirect_uri=http://localhost:3000/callback&scope=openid%20profile&code_challenge=$code_challenge&code_challenge_method=S256"
+       ```
+    2. **Exchange Code for Token with Verifier:**
+       ```sh
+       curl -X POST http://localhost:4000/token \
+         -d "grant_type=authorization_code" \
+         -d "code=AUTH_CODE" \
+         -d "redirect_uri=http://localhost:3000/callback" \
+         -d "client_id=web-app" \
+         -d "code_verifier=randomstring123"
+       ```
+
+  - **Testing and Error Simulation:**
+    - You can simulate PKCE errors by providing an incorrect `code_verifier` during token exchange; the server will return an `invalid_grant` error.
+    - Delay and error injection features work with PKCE flows for robust client testing.
+    - Automated tests verify correct PKCE handling, error scenarios, and compliance.
+
+  - **Reference:**
+    - See the OpenAPI spec for full details on PKCE parameters and error responses.
+    - The simulator is compatible with major OAuth2/OIDC client libraries supporting PKCE.
 
 - **Consent Screen UI with Approval/Denial Toggles**  
   - Presents requested scopes and claims to the user for approval or denial.

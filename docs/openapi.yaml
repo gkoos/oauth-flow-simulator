@@ -202,6 +202,19 @@ paths:
           required: false
           schema:
             type: string
+        - name: code_challenge
+          in: query
+          required: false
+          description: PKCE code challenge. Required for public clients using PKCE.
+          schema:
+            type: string
+        - name: code_challenge_method
+          in: query
+          required: false
+          description: PKCE code challenge method. Must be 'plain' or 'S256' if provided. Defaults to 'plain' if omitted.
+          schema:
+            type: string
+            enum: [plain, S256]
       responses:
         '302':
           description: Redirect to client with authorization code or error.

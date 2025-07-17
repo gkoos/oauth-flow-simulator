@@ -1,4 +1,5 @@
 import { getClient, isValidRedirectUri, getOriginalQuery, mergeJWTClaims, resolveDynamicClaim, createContextForDynamicClaims } from '../lib/helpers.js';
+import { validatePkce } from '../lib/helpers.js';
 
 describe('helpers', () => {
   const clients = [
@@ -151,5 +152,20 @@ describe('createContextForDynamicClaims', () => {
     const context = createContextForDynamicClaims({});
     expect(context.username).toBeUndefined();
     expect(context.client).toBeUndefined();
+  });
+});
+
+describe('validatePkce', () => {
+  test('plain method: verifier == challenge returns true', () => {
+    expect(validatePkce('abc123', 'abc123', 'plain')).toBe(true);
+  });
+
+  test('plain method: verifier != challenge returns false', () => {
+    expect(validatePkce('abc123', 'def456', 'plain')).toBe(false);
+  });
+
+  test('S256 method: verifier == challenge returns false', () => {
+    // S256 expects challenge to be a base64url-encoded SHA256 of verifier, so direct equality should fail
+    expect(validatePkce('abc123', 'abc123', 'S256')).toBe(false);
   });
 });
