@@ -7,7 +7,9 @@ program
   .option('-p, --port <port>', 'Port to run the server on', '4000')
   .option('--base-url <url>', 'Base URL for API requests (e.g., http://localhost:4000)')
   .option('--secure-cookies', 'Enable secure cookie/session behavior (sets HTTPS=true)')
-  .option('--log-file <path>', 'Write HTTP request logs to the specified file in addition to stdout');
+  .option('--log-file <path>', 'Write HTTP request logs to the specified file in addition to stdout')
+  .option('--asym-key-signing', 'Enable asymmetric key signing')
+  .option('--no-include-jwt-kid', 'Exclude kid from JWT header (default: include)');
 
 function mergeGlobalOptions(options) {
   // Merge global options from program.opts() into command options

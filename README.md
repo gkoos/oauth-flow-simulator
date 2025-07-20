@@ -89,7 +89,7 @@ Returns metadata about an access or refresh token. Requires client authenticatio
 ```sh
 curl -X POST http://localhost:4000/introspect \
   -u web-app:shhh \
-  -d token=ACCESS_TOKEN
+
 ```
 **Example (refresh token):**
 ```sh
@@ -124,17 +124,14 @@ curl http://localhost:4000/.well-known/openid-configuration
 
 ## Userinfo Endpoint (`/userinfo`) and Dynamic Claims Configuration
 
-The `/userinfo` endpoint returns user profile claims based on the scopes granted in the access token. It supports Bearer token authentication and is fully configurable at runtime.
 
 **How `/userinfo` works:**
 - Accepts a valid access token via `Authorization: Bearer <token>`
-- Returns only the claims permitted by the scopes in the token (e.g., `openid`, `profile`, `email`)
 - Claims are omitted if not present for the user
 - Returns 401 for invalid/missing tokens, 403 for insufficient scopes
 - Supports error and delay simulation for robust client testing
 
 **Configuring claims via API:**
-- Claim-to-scope mappings can be set globally, per client, or per user using the management API:
   - `POST /sim/config/userinfo` (global config)
   - `POST /sim/config/userinfo/clients/{clientId}` (per-client config)
   - `POST /sim/config/userinfo/users/{userName}` (per-user config)
@@ -142,10 +139,6 @@ The `/userinfo` endpoint returns user profile claims based on the scopes granted
 - Changes take effect immediately and override defaults as needed
 
 **Example configuration:**
-```sh
-curl -X POST http://localhost:4000/sim/config/userinfo \
-  -H "Content-Type: application/json" \
-  -d '{"profile": ["name", "email", "preferred_username"]}'
 ```
 
 **Example usage:**
@@ -455,11 +448,44 @@ The OAuth Flow Simulator provides a powerful CLI for interacting with the mock s
 - **Scripting:** Use in shell scripts or npm scripts for setup/teardown of test environments.
 - **Config management:** Dynamically inject errors, delays, or JWT claims for specific endpoints during tests.
 
+
+
 ### Tips
 - Use `--base-url` to target a running server on a custom port or host.
 - Always provide valid JSON for `--body` (the CLI will validate and parse it).
 - The CLI does not start the server for API commands; ensure the server is running before making API calls.
 - For advanced usage, combine CLI calls with curl, Postman, or other tools for full coverage.
+
+
+### Async Key Signing
+
+Use the `--async-key-signing` option to enable asynchronous key signing in the simulator. When set, this will allow you to test flows that require async signing operations (such as hardware security modules or remote key services).
+
+**Example:**
+```sh
+npx oauth-sim --async-key-signing
+```
+
+### JWT kid Header Control
+
+Use the `--no-include-jwt-kid` option to exclude the `kid` field from JWT headers. By default, the simulator includes `kid` in JWT headers for standards compliance and easier key rotation/testing. If you want to test clients or flows that require the absence of `kid`, use this option:
+
+**Example:**
+```sh
+npx oauth-sim --no-include-jwt-kid
+```
+This omits `kid` from JWT headers.
+
+## JWKS Endpoint (`/jwks`)
+
+The `/jwks` endpoint exposes the server's current public signing keys in [JSON Web Key Set (JWKS)](https://datatracker.ietf.org/doc/html/rfc7517) format. This allows OAuth2/OIDC clients and libraries to verify ID tokens and access tokens issued by the simulator.
+
+**Example usage:**
+```sh
+curl http://localhost:4000/jwks
+```
+
+The response contains a `keys` array with all active public keys. Use this endpoint for automated key discovery and token validation in your tests.
 
 ## PKCE (Proof Key for Code Exchange) Support
 
@@ -489,11 +515,65 @@ The OAuth Flow Simulator fully supports the PKCE (Proof Key for Code Exchange) e
      -d code_verifier=xyz456
    ```
 
-### Implementation Details
-- PKCE parameters are stored with the authorization code in the in-memory store.
-- The `/token` endpoint checks the code verifier against the stored challenge and method before issuing tokens.
-- Error responses follow RFC 7636 for invalid or missing PKCE parameters.
-- PKCE support is documented in the OpenAPI spec and can be tested via curl, Postman, or the CLI.
+## Asymmetric Key Signing and Key Management
+
+The OAuth Flow Simulator supports asymmetric key signing (RSA/EC) for JWT access and ID tokens. This allows you to test scenarios with RS256, ES256, and other algorithms, simulating real-world OAuth2/OIDC providers that use public/private key pairs for token signing and verification.
+
+### Enabling Asymmetric Key Signing
+
+Enable asymmetric key signing using the CLI option:
+
+```sh
+npx oauth-sim --async-key-signing
+```
+Or set the environment variable:
+```sh
+ASYM_KEY_SIGNING=true
+```
+
+When enabled, the simulator uses the configured RSA or EC key to sign JWTs. The default is symmetric (HS256) signing unless overridden.
+
+### Controlling JWT `kid` Header
+
+By default, the simulator includes the `kid` (Key ID) field in JWT headers for standards compliance and easier key rotation/testing. To exclude the `kid` field from JWT headers, use:
+
+```sh
+npx oauth-sim --async-key-signing --no-include-jwt-kid
+```
+Or set the environment variables:
+```sh
+ASYM_KEY_SIGNING=true
+INCLUDE_JWT_KID=false
+```
+
+### Managing Keys via `/sim/keys` Endpoint
+
+The `/sim/keys` REST API endpoint allows you to view, add, and remove signing keys at runtime. This is useful for testing key rotation, multiple key scenarios, and JWKS endpoint behavior.
+
+- **List current keys:**
+  ```sh
+  curl http://localhost:4000/sim/keys
+  ```
+- **Add a new key:**
+  ```sh
+  curl -X POST http://localhost:4000/sim/keys \
+    -H "Content-Type: application/json" \
+    -d '{ "kty": "RSA", "kid": "newkey1", "n": "...", "e": "..." }'
+  ```
+- **Remove a key:**
+  ```sh
+  curl -X DELETE http://localhost:4000/sim/keys/newkey1
+  ```
+
+All changes take effect immediately. The JWKS endpoint (`/jwks`) will reflect the current set of public keys.
+
+### Use Cases
+- Simulate real-world public/private key signing for OAuth2/OIDC flows
+- Test client and resource server behavior with RS256/ES256 tokens
+- Validate JWKS endpoint and key rotation logic
+- Control JWT header fields for advanced client testing
+
+See the OpenAPI spec for full details on key management endpoints and payload formats.
 
 ## License
 MIT

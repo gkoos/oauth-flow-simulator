@@ -39,47 +39,47 @@ describe('handleToken', () => {
     process.env.JWT_SECRET = 'test';
   });
 
-  it('returns access token for valid request', () => {
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+  it('returns access token for valid request', async () => {
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ access_token: expect.any(String), token_type: 'Bearer' }));
     expect(Object.keys(tokens).length).toBeGreaterThan(0);
   });
 
-  it('returns access token for valid request using HTTP Basic Auth', () => {
+  it('returns access token for valid request using HTTP Basic Auth', async () => {
     // Simulate HTTP Basic Auth header
     const base64 = Buffer.from('web-app:shhh').toString('base64');
     req.headers = { authorization: `Basic ${base64}` };
     // Remove client_secret from body to ensure only header is used
     delete req.body.client_secret;
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ access_token: expect.any(String), token_type: 'Bearer' }));
     expect(Object.keys(tokens).length).toBeGreaterThan(0);
   });
 
-  it('returns error for unsupported grant_type', () => {
+  it('returns error for unsupported grant_type', async () => {
     req.body.grant_type = 'password';
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'unsupported_grant_type' }));
   });
 
-  it('returns error for invalid client', () => {
+  it('returns error for invalid client', async () => {
     getClient = jest.fn(() => undefined);
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_client' }));
   });
 
-  it('returns error for invalid redirect uri', () => {
+  it('returns error for invalid redirect uri', async () => {
     isValidRedirectUri = jest.fn(() => false);
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
 
-  it('returns error for invalid or expired code', () => {
+  it('returns error for invalid or expired code', async () => {
     req.body.code = 'bad';
-    handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri, authCodes, users, tokens });
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
@@ -109,36 +109,36 @@ describe('refresh token flow', () => {
     };
     return refresh_token;
   }
-  it('rotates refresh token and returns new tokens', () => {
+  it('rotates refresh token and returns new tokens', async () => {
     const oldRefresh = issueRefreshToken();
     const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ access_token: expect.any(String), refresh_token: expect.any(String) }));
     expect(refreshTokens[oldRefresh]).toBeUndefined();
     const newRefresh = res.json.mock.calls[0][0].refresh_token;
     expect(refreshTokens[newRefresh]).toBeDefined();
     expect(refreshTokens[newRefresh].username).toBe(username);
   });
-  it('prevents replay of used refresh token', () => {
+  it('prevents replay of used refresh token', async () => {
     const oldRefresh = issueRefreshToken();
     const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     // Try again with same token
     const res2 = { status: jest.fn(() => res2), json: jest.fn() };
-    handleToken(req, res2, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res2, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     expect(res2.status).toHaveBeenCalledWith(400);
     expect(res2.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
-  it('returns error for invalid refresh token', () => {
+  it('returns error for invalid refresh token', async () => {
     const req = { body: { grant_type: 'refresh_token', refresh_token: 'badtoken', client_id: clientId, client_secret: clientSecret } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
-  it('returns error for wrong client', () => {
+  it('returns error for wrong client', async () => {
     // Setup: two clients
     const clientA = { clientId: 'clientA', clientSecret: 'secretA', refreshTokenLifetime: 3600000 };
     const clientB = { clientId: 'clientB', clientSecret: 'secretB', refreshTokenLifetime: 3600000 };
@@ -170,12 +170,12 @@ describe('refresh token flow', () => {
     };
     const res = { status: jest.fn(() => res), json: jest.fn() };
 
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
   });
-  it('returns error for expired refresh token', () => {
+  it('returns error for expired refresh token', async () => {
     const now = Date.now();
     const expiredRefresh = 'expired_' + Math.random().toString(36).slice(2,10);
     refreshTokens[expiredRefresh] = {
@@ -187,16 +187,16 @@ describe('refresh token flow', () => {
     };
     const req = { body: { grant_type: 'refresh_token', refresh_token: expiredRefresh, client_id: clientId, client_secret: clientSecret } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'invalid_grant' }));
     expect(refreshTokens[expiredRefresh]).toBeUndefined();
   });
-  it('new refresh token metadata is correct', () => {
+  it('new refresh token metadata is correct', async () => {
     const oldRefresh = issueRefreshToken();
     const req = { body: { grant_type: 'refresh_token', refresh_token: oldRefresh, client_id: clientId, client_secret: clientSecret } };
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
+    await handleToken(req, res, { getClient, isValidRedirectUri: jest.fn(() => true), authCodes: {}, users, tokens, refreshTokens });
     const newRefresh = res.json.mock.calls[0][0].refresh_token;
     const meta = refreshTokens[newRefresh];
     expect(meta).toBeDefined();

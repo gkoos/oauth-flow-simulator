@@ -131,7 +131,7 @@ describe('createContextForDynamicClaims', () => {
     expect(context.username).toBe('bob');
     expect(context.client).toBe('web-app');
     expect(context.scope).toBe('openid');
-    expect(context.aud).toBe('http://localhost:3000');
+    expect(context.aud).toBe('web-app');
     expect(context.host).toBe('http://localhost:4000');
     expect(typeof context.now).toBe('number');
     expect(typeof context.iat).toBe('number');
