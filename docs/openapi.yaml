@@ -6,6 +6,48 @@ info:
 servers:
   - url: http://localhost:4000
 paths:
+  /jwks:
+    get:
+      summary: Get JSON Web Key Set (JWKS)
+      description: Returns the public keys used for signing tokens in JWKS format.
+      tags:
+        - OIDC
+      responses:
+        '200':
+          description: JWKS response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        kid:
+                          type: string
+                        kty:
+                          type: string
+                        alg:
+                          type: string
+                        use:
+                          type: string
+                        n:
+                          type: string
+                        e:
+                          type: string
+                        crv:
+                          type: string
+                        x:
+                          type: string
+                        y:
+                          type: string
+                      required:
+                        - kid
+                        - kty
+                        - alg
+                        - use
   /revoke:
     post:
       summary: OAuth2 Token Revocation Endpoint
@@ -678,6 +720,8 @@ paths:
     post:
       summary: Create a new signing key
       operationId: createKey
+      tags:
+        - Server Management
       requestBody:
         content:
           application/json:

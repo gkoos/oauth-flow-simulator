@@ -31,7 +31,7 @@ describe("/sim/keys API", () => {
     // EC key
     res = await request(server)
       .post("/sim/keys/generate")
-      .send({ kty: "EC", alg: "ES256", curve: "P-256" });console.log(res.body)
+      .send({ kty: "EC", alg: "ES256", curve: "P-256" });
     expect(res.status).toBe(201);
     expect(res.body.kty).toBe("EC");
     expect(res.body.alg).toBe("ES256");
